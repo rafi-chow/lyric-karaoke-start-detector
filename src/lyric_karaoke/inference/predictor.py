@@ -2,14 +2,11 @@ import joblib
 import librosa
 import numpy as np
 
-from .features import extract_features
-from .segments import (
-    predictions_to_segments,
-    clean_segments,
-    median_smooth,
-    enforce_min_consecutive,
-)
-from .karaoke_logic import choose_karaoke_start
+from ..features.mel import extract_features
+from ..segments.build import predictions_to_segments
+from ..segments.clean import clean_segments
+from ..segments.smooth import median_smooth, enforce_min_consecutive
+from ..karaoke_logic.choose_start import choose_karaoke_start
 
 
 class KaraokePredictor:
