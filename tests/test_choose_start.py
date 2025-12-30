@@ -14,7 +14,7 @@ def load_choose_module():
     Import the module that contains choose_karaoke_start.
     Update the import path here if you moved files.
     """
-    # ✅ preferred final path (recommended structure)
+
     return importlib.import_module("lyric_karaoke.karaoke_logic.choose_start")
 
 

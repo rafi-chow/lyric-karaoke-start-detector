@@ -1,12 +1,15 @@
 import librosa
 import numpy as np
+from typing import List, Dict
+
+from lyric_karaoke.features.aggregate import aggregate_mel_to_frames
+
 
 def extract_features(audio_path, frame_duration=0.5):
     """
-    Match Harmonix-trained features:
-    - Use linear/power mel (NO dB conversion)
-    - Compute mel on full song once
-    - Chunk mel frames into 0.5s windows and average
+    DEPRECATED:
+    This function defines its own time grid and can cause training–serving skew.
+    Use extract_mel_features_for_frames with a canonical frame grid instead.
     """
     sr = 22050
     hop_length = 1024
@@ -45,3 +48,46 @@ def extract_features(audio_path, frame_duration=0.5):
     X = np.vstack(X_chunks) if X_chunks else np.zeros((0, n_mels), dtype=np.float32)
     times = np.arange(len(X), dtype=np.float32) * frame_duration
     return X.astype(np.float32), times
+
+def extract_mel_features_for_frames(
+    audio_path: str,
+    frame_grid: List[Dict],
+    sr: int = 22050,
+    n_mels: int = 80,
+    hop_length: int = 512,
+) -> np.ndarray:
+    """
+    Inference adapter:
+    - loads audio
+    - computes mel spectrogram
+    - aggregates mel frames into canonical frame grid
+    """
+    # Load audio
+    y, sr = librosa.load(audio_path, sr=sr)
+
+    # Compute mel spectrogram
+    mel = librosa.feature.melspectrogram(
+        y=y,
+        sr=sr,
+        n_mels=n_mels,
+        hop_length=hop_length,
+        power=2.0,
+    )
+
+    # Convert to log-mel (dB)
+    mel_db = librosa.power_to_db(mel, ref=np.max)
+
+    # Transpose to shape (n_mel_frames, n_mels)
+    mel_db = mel_db.T
+
+    # Build mel frame timestamps
+    mel_times = librosa.frames_to_time(
+        np.arange(mel_db.shape[0]),
+        sr=sr,
+        hop_length=hop_length,
+    )
+
+    # Aggregate to canonical frames
+    X = aggregate_mel_to_frames(mel_db, mel_times, frame_grid)
+
+    return X
