@@ -49,12 +49,15 @@ def extract_features(audio_path, frame_duration=0.5):
     times = np.arange(len(X), dtype=np.float32) * frame_duration
     return X.astype(np.float32), times
 
+
 def extract_mel_features_for_frames(
     audio_path: str,
     frame_grid: List[Dict],
     sr: int = 22050,
     n_mels: int = 80,
-    hop_length: int = 512,
+    n_fft: int = 2048,
+    hop_length: int = 1024,
+    power: float = 2.0,
 ) -> np.ndarray:
     """
     Inference adapter:
@@ -63,31 +66,31 @@ def extract_mel_features_for_frames(
     - aggregates mel frames into canonical frame grid
     """
     # Load audio
-    y, sr = librosa.load(audio_path, sr=sr)
+    y, sr = librosa.load(audio_path, sr=sr, mono=True)
 
     # Compute mel spectrogram
     mel = librosa.feature.melspectrogram(
         y=y,
         sr=sr,
-        n_mels=n_mels,
+        n_fft=n_fft,
         hop_length=hop_length,
-        power=2.0,
+        n_mels=n_mels,
+        power=power,
     )
 
-    # Convert to log-mel (dB)
-    mel_db = librosa.power_to_db(mel, ref=np.max)
-
-    # Transpose to shape (n_mel_frames, n_mels)
-    mel_db = mel_db.T
+    # IMPORTANT: keep power/linear mel (NO dB conversion).
+    # Harmonix-style melspecs are on a power scale.
+    # (n_mels, T) -> (T, n_mels)
+    mel = mel.T.astype(np.float32)
 
     # Build mel frame timestamps
     mel_times = librosa.frames_to_time(
-        np.arange(mel_db.shape[0]),
+        np.arange(mel.shape[0]),
         sr=sr,
         hop_length=hop_length,
     )
 
     # Aggregate to canonical frames
-    X = aggregate_mel_to_frames(mel_db, mel_times, frame_grid)
+    X = aggregate_mel_to_frames(mel, mel_times, frame_grid)
 
     return X

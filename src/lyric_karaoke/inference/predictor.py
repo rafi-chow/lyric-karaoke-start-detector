@@ -2,7 +2,8 @@ import joblib
 import librosa
 import numpy as np
 
-from ..features.mel import extract_features
+from ..datasets.frame_grid import build_frame_grid
+from ..features.mel import extract_mel_features_for_frames
 from ..segments.build import predictions_to_segments
 from ..segments.clean import clean_segments
 from ..segments.smooth import median_smooth, enforce_min_consecutive
@@ -46,8 +47,22 @@ class KaraokePredictor:
         return y, raw, segs
 
     def predict(self, audio_path: str):
-        # 1) Extract features (must match training feature scale)
-        X, times = extract_features(audio_path, self.frame_duration)
+        # 0) Load audio once to get duration
+        y_audio, sr = librosa.load(audio_path, sr=22050, mono=True)
+        song_duration = float(librosa.get_duration(y=y_audio, sr=sr))
+
+        # 1) Build canonical frame grid + extract features on that grid
+        frame_grid = build_frame_grid(song_duration, frame_duration=self.frame_duration)
+        times = np.array([f["t_start"] for f in frame_grid], dtype=np.float32)
+        X = extract_mel_features_for_frames(
+            audio_path=audio_path,
+            frame_grid=frame_grid,
+            sr=22050,
+            n_mels=80,
+            n_fft=2048,
+            hop_length=1024,
+            power=2.0,
+        )
 
         if X.size == 0:
             return {"segments": [], "karaoke_start": None}
@@ -73,11 +88,7 @@ class KaraokePredictor:
             merge_gap=1.0,
         )
 
-        # 5) Song duration (for karaoke logic)
-        y_audio, sr = librosa.load(audio_path, sr=None, mono=True)
-        song_duration = librosa.get_duration(y=y_audio, sr=sr)
-
-        # 6) Choose karaoke start from start_segments (not the displayed segments)
+        # 5) Choose karaoke start from start_segments (not the displayed segments)
         karaoke_start = choose_karaoke_start(start_segments, song_duration)
 
         if self.debug:

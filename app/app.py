@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 from flask import Flask, request, jsonify, render_template
 
-from src.inference_baseline import KaraokePredictor
+from lyric_karaoke.inference.predictor import KaraokePredictor
+
 
 app = Flask(__name__)
 
