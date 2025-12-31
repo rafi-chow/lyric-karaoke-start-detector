@@ -35,3 +35,7 @@ models/
 build/
 dist/
 *.egg-info/
+
+# trained models (local artifacts)
+models/
+*.pkl
