@@ -1,0 +1,35 @@
+from pathlib import Path
+
+from lyric_karaoke.inference.predictor import KaraokePredictor
+
+
+def main():
+    # CHANGE THESE PATHS (local-only, do NOT commit audio)
+    MODEL_PATH = Path("models/harmonix_lr.pkl")
+    AUDIO_PATH = Path(r"C:\Users\psult\Downloads\Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster).mp3")  # <-- change this
+
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(f"Model not found: {MODEL_PATH}")
+
+    if not AUDIO_PATH.exists():
+        raise FileNotFoundError(f"Audio not found: {AUDIO_PATH}")
+
+    kp = KaraokePredictor(
+        model_path=str(MODEL_PATH),
+        frame_duration=0.5,
+        thr_segments=0.40,  # display threshold
+        thr_start=0.35,     # start-finding threshold
+        debug=True,
+    )
+
+    result = kp.predict(str(AUDIO_PATH))
+
+    print("\n=== RESULT ===")
+    print("karaoke_start:", result["karaoke_start"])
+    print("\nSegments:")
+    for s in result["segments"]:
+        print(f'{s["start"]:.1f} → {s["end"]:.1f}  (dur={s["end"] - s["start"]:.1f}s)')
+
+
+if __name__ == "__main__":
+    main()

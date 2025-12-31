@@ -16,6 +16,11 @@ def extract_features(audio_path, frame_duration=0.5):
     n_fft = 2048
     n_mels = 80
 
+    raise RuntimeError(
+        "extract_features() is deprecated. "
+        "Use extract_mel_features_for_frames() with a canonical frame grid."
+    )
+
     y, _ = librosa.load(audio_path, sr=sr, mono=True)
 
     # Linear/power mel spectrogram (positive values)

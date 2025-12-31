@@ -15,7 +15,7 @@ class KaraokePredictor:
         self,
         model_path: str,
         frame_duration: float = 0.5,
-        thr_segments: float = 0.38,
+        thr_segments: float = 0.40,
         thr_start: float = 0.35,
         debug: bool = False,
     ):
