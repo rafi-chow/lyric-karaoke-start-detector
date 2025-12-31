@@ -8,16 +8,23 @@ from lyric_karaoke.inference.predictor import KaraokePredictor
 
 app = Flask(__name__)
 
+# ---- Hardening ----
+app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25 MB
+
+
 UPLOAD_DIR = os.environ.get("KARAOKE_UPLOAD_DIR", "tmp")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-MODEL_PATH = os.environ.get("KARAOKE_MODEL_PATH", os.path.join("models", "harmonix_lr.pkl"))
+MODEL_PATH = os.environ.get(
+    "KARAOKE_MODEL_PATH",
+    os.path.join("models", "harmonix_lr.pkl"),
+)
 
 _predictor: KaraokePredictor | None = None
 
 
 def get_predictor() -> KaraokePredictor | None:
-    """Lazy-load the predictor so the app can run without bundled model weights."""
+    """Lazy-load predictor so the app can run without bundled model weights."""
     global _predictor
     if _predictor is not None:
         return _predictor
@@ -25,8 +32,23 @@ def get_predictor() -> KaraokePredictor | None:
     if not os.path.exists(MODEL_PATH):
         return None
 
-    _predictor = KaraokePredictor(model_path=MODEL_PATH, frame_duration=0.5)
+    _predictor = KaraokePredictor(
+        model_path=MODEL_PATH,
+        frame_duration=0.5,
+        thr_segments=0.40,
+        thr_start=0.35,
+    )
     return _predictor
+
+
+@app.errorhandler(413)
+def file_too_large(e):
+    return jsonify({"error": "File too large (max 25MB)"}), 413
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
 
 
 @app.route("/upload", methods=["POST"])
@@ -37,8 +59,8 @@ def upload():
             jsonify(
                 {
                     "error": (
-                        "No model weights found. Train a model (see DATASETS.md / scripts) "
-                        "or set KARAOKE_MODEL_PATH to an existing .pkl."
+                        "No model weights found. "
+                        "Train a model or set KARAOKE_MODEL_PATH."
                     )
                 }
             ),
@@ -57,15 +79,14 @@ def upload():
 
     try:
         result = predictor.predict(filepath)
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-    return jsonify(result)
-
-
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("index.html")
+    finally:
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":
