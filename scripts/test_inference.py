@@ -6,7 +6,7 @@ from lyric_karaoke.inference.predictor import KaraokePredictor
 def main():
     # CHANGE THESE PATHS (local-only, do NOT commit audio)
     MODEL_PATH = Path("models/harmonix_lr.pkl")
-    AUDIO_PATH = Path(r"C:\Users\psult\Downloads\Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster).mp3")  # <-- change this
+    AUDIO_PATH = Path(r"ex_path")  # <-- change this
 
     if not MODEL_PATH.exists():
         raise FileNotFoundError(f"Model not found: {MODEL_PATH}")
