@@ -1,3 +1,6 @@
+## Architecture (high level)
+
+```mermaid
 graph TD
   A[Audio Upload] --> B[Feature Extraction<br/>0.5s frames, 80-mel]
   B --> C[Frame Classifier<br/>LogReg + Scaler]
