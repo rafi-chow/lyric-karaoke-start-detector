@@ -10,13 +10,11 @@ const segmentsList = document.getElementById("segments-list");
 
 let karaokeStart = null;
 
-
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
   const s = (seconds % 60).toFixed(1).padStart(4, "0");
   return `${m}:${s}`;
 }
-
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -28,7 +26,6 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // UI → loading state
   analyzeBtn.disabled = true;
   analyzeBtn.textContent = "Analyzing…";
   karaokeText.textContent = "Analyzing audio, please wait…";
@@ -37,7 +34,6 @@ form.addEventListener("submit", async (e) => {
   resultsDiv.style.display = "block";
 
   try {
-    // Preview audio immediately
     audioPlayer.src = URL.createObjectURL(file);
     audioPlayer.load();
 
@@ -60,19 +56,17 @@ form.addEventListener("submit", async (e) => {
     if (karaokeStart === null) {
       karaokeText.textContent = "No karaoke start detected.";
     } else {
-      karaokeText.textContent =
-        `Suggested karaoke start: ${formatTime(karaokeStart)}`;
+      karaokeText.textContent = `Suggested karaoke start: ${formatTime(karaokeStart)}`;
     }
 
     segmentsList.innerHTML = "";
 
-    if (data.segments.length === 0) {
+    if (!data.segments || data.segments.length === 0) {
       segmentsList.innerHTML = "<li>No lyric segments detected.</li>";
     } else {
       data.segments.forEach(seg => {
         const li = document.createElement("li");
-        li.textContent =
-          `Lyrics from ${formatTime(seg.start)} → ${formatTime(seg.end)}`;
+        li.textContent = `Lyrics from ${formatTime(seg.start)} → ${formatTime(seg.end)}`;
         segmentsList.appendChild(li);
       });
     }
@@ -84,7 +78,6 @@ form.addEventListener("submit", async (e) => {
     analyzeBtn.textContent = "Analyze";
   }
 });
-
 
 jumpBtn.addEventListener("click", () => {
   if (karaokeStart !== null) {

@@ -7,8 +7,9 @@ requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "Rafi Chowdhury", email = "chowdhury.rafi01@gmail.com" }]
 
-# NOTE: Dependencies are currently maintained in requirements.txt for simplicity.
-# Day 2: move dependencies here and make this an installable package.
+# CLI entry point
+[project.scripts]
+karaoke-predict = "lyric_karaoke.cli:main"
 
 [tool.ruff]
 line-length = 100

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   test:
@@ -19,20 +19,44 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Find project root
+        shell: bash
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest scikit-learn joblib numpy
+          set -e
+          ROOT="."
+          if [ ! -f "$ROOT/pyproject.toml" ]; then
+            ROOT="$(dirname "$(find . -maxdepth 3 -name pyproject.toml -print -quit)")"
+          fi
+          echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
+          echo "Using project root: $ROOT"
 
-      - name: Train toy model
+      - name: Install dependencies
+        shell: bash
         run: |
+          set -e
+          cd "$PROJECT_ROOT"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: Train toy model (reproducible)
+        shell: bash
+        run: |
+          set -e
+          cd "$PROJECT_ROOT"
           python scripts/train_toy.py
 
-      - name: Smoke inference with toy model
+      - name: Smoke inference (toy model)
+        shell: bash
         run: |
+          set -e
+          cd "$PROJECT_ROOT"
           python scripts/smoke_toy_predict.py
 
-      - name: Run tests
+      - name: Run unit tests
+        shell: bash
         run: |
+          set -e
+          cd "$PROJECT_ROOT"
           pytest -q

@@ -5,20 +5,15 @@ from flask import Flask, request, jsonify, render_template
 
 from lyric_karaoke.inference.predictor import KaraokePredictor
 
-
 app = Flask(__name__)
 
-# ---- Hardening ----
-app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25 MB
-
+# Prevent abuse
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB
 
 UPLOAD_DIR = os.environ.get("KARAOKE_UPLOAD_DIR", "tmp")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-MODEL_PATH = os.environ.get(
-    "KARAOKE_MODEL_PATH",
-    os.path.join("models", "harmonix_lr.pkl"),
-)
+MODEL_PATH = os.environ.get("KARAOKE_MODEL_PATH", os.path.join("models", "harmonix_lr.pkl"))
 
 _predictor: KaraokePredictor | None = None
 
@@ -37,13 +32,14 @@ def get_predictor() -> KaraokePredictor | None:
         frame_duration=0.5,
         thr_segments=0.40,
         thr_start=0.35,
+        debug=False,
     )
     return _predictor
 
 
 @app.errorhandler(413)
 def file_too_large(e):
-    return jsonify({"error": "File too large (max 25MB)"}), 413
+    return jsonify({"error": "File too large (max 100MB)"}), 413
 
 
 @app.route("/", methods=["GET"])
@@ -59,8 +55,8 @@ def upload():
             jsonify(
                 {
                     "error": (
-                        "No model weights found. "
-                        "Train a model or set KARAOKE_MODEL_PATH."
+                        "No model weights found. Train a model locally or set KARAOKE_MODEL_PATH "
+                        "to an existing .pkl."
                     )
                 }
             ),
