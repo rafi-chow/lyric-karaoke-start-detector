@@ -60,3 +60,10 @@ jobs:
           set -e
           cd "$PROJECT_ROOT"
           pytest -q
+
+        - name: Evaluate hand-labeled set
+        run: |
+          set -e
+          cd "$PROJECT_ROOT"
+          python scripts/eval_handset.py --csv data/eval_handset.csv
+

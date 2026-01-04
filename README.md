@@ -125,12 +125,22 @@ Notes:
 
 ---
 
+## Evaluation (hand-labeled)
+```bash
+python scripts/eval_handset.py --csv data/eval_handset.csv --print-outliers
+```
+
+---
+
 ## Documentation
 
 - `docs/design.md` — architecture, invariants (canonical time grid), post-processing rationale
 - `DATASETS.md` — dataset setup notes (if training on Harmonix locally)
 
 ---
+
+
+
 
 ## Contributing
 
