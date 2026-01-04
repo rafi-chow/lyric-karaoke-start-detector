@@ -62,6 +62,7 @@ jobs:
           pytest -q
 
       - name: Evaluate hand-labeled set
+        shell: bash
         run: |
           set -e
           cd "$PROJECT_ROOT"
