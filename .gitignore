@@ -23,7 +23,10 @@ notebooks/
 # Local artifacts / data
 /tmp/
 tmp/
-/data/
+# data/ is generally ignored, but we track the small hand-eval CSV
+data/*
+!data/eval_handset.csv
+
 models/
 *.wav
 *.mp3
